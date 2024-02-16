@@ -1,63 +1,72 @@
-import React from 'react';
-import { StyleSheet, css } from 'aphrodite';
+import React, { Component } from 'react'
+import { StyleSheet, css } from 'aphrodite'
+import WithLoggingHOC from '../HOC/WithLogging'
 
-const styles = StyleSheet.create({
-	'App-body': {
-		fontSize: '1.4rem',
-		padding: '1.2em',
-		height: '45%',
-	},
+class Login extends Component {
+	render() {
+		return (
+			<React.Fragment>
+				<div className="App">
+					<main className={css(loginStyles.appBody)}>
+						<p>Login to access the full dashboard</p>
+						<div className={css(loginStyles.inputs)}>
+							<label className={css(loginStyles.label)} htmlFor="email" onClick={() => {
+								// select corresponding input
+								document.getElementById('password').focus();
+							}}>Email</label>
+							<input type="email" id="email" className={css(loginStyles.input)} />
+							<label className={css(loginStyles.label)} htmlFor="password" onClick={() => {
+								// select corresponding input
+								document.getElementById('password').focus();
+							}}>Password</label>
+							<input type="password" id="password" className={css(loginStyles.input)} />
+							<button className={css(loginStyles.button)}>OK</button>
+						</div>
+					</main>
+				</div>
+			</React.Fragment>
+		)
+	}
+}
 
-	'form-inputs': {
+const primaryColor = '#E11D3F';
+
+const loginStyles = StyleSheet.create({
+	appBody: {
 		display: 'flex',
-		gap: '2em',
-		alignItems: 'center',
+		flexDirection: 'column',
+		marginBottom: '3rem',
+		height: '100%',
 	},
 
-	mobile: {
-		'@media (max-width: 375px)': {
+	inputs: {
+		'@media (min-width: 350px)': {
 			display: 'flex',
 			flexDirection: 'column',
-			alignItems: 'flex-start',
-			gap: '0.5em',
+			maxWidth: '200px'
 		},
+		'@media (min-width: 900px)': {
+			display: 'flex',
+			flexDirection: 'row',
+		}
 	},
 
 	input: {
-		height: '1.4rem',
-		marginLeft: '10px',
+		height: '15px',
+		marginLeft: '0.2rem',
+		marginTop: '0.5rem',
 	},
-});
 
-const Login = () => {
-	return (
-		<>
-			<div className={css(styles['App-body'])}>
-				<p>Login to access the full dashboard</p>
-				<section className={css(styles['form-inputs'], styles.mobile)}>
-					<section className='input'>
-						<label htmlFor='email'>Email:</label>
-						<input
-							type='email'
-							name='email'
-							id='email'
-							className={css(styles.input)}
-						/>
-					</section>
-					<section className='input'>
-						<label htmlFor='password'>Password: </label>
-						<input
-							type='password'
-							name='password'
-							id='password'
-							className={css(styles.input)}
-						/>
-					</section>
-					<button>OK</button>
-				</section>
-			</div>
-		</>
-	);
-};
+	label: {
+		marginTop: '0.5rem',
+	},
 
-export default Login;
+	button: {
+		height: '21px',
+		marginTop: '0.6rem',
+		maxWidth: '40px',
+	}
+})
+
+
+export default WithLoggingHOC(Login)

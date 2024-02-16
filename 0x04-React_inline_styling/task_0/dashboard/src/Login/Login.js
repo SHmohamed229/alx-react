@@ -1,25 +1,33 @@
-import React from 'react';
-import './Login.css';
+import React, { Component } from 'react'
+import WithLoggingHOC from '../HOC/WithLogging'
+import './Login.css'
 
-const Login = () => {
-	return (
-		<>
-			<div className='App-body'>
-				<p>Login to access the full dashboard</p>
-				<section className='form-inputs'>
-					<section className='input'>
-						<label htmlFor='email'>Email:</label>
-						<input type='email' name='email' id='email' />
-					</section>
-					<section className='input'>
-						<label htmlFor='password'>Password: </label>
-						<input type='password' name='password' id='password' />
-					</section>
-					<button>OK</button>
-				</section>
-			</div>
-		</>
-	);
-};
+class Login extends Component {
+	render() {
+		return (
+			<React.Fragment>
+				<div className="App">
+					<main className="App-body">
+						<p>Login to access the full dashboard</p>
+						<div className="inputs">
+							<label htmlFor="email" onClick={() => {
+								// select corresponding input
+								document.getElementById('password').focus();
+							}}>Email</label>
+							<input type="email" id="email" />
+							<label htmlFor="password" onClick={() => {
+								// select corresponding input
+								document.getElementById('password').focus();
+							}}>Password</label>
+							<input type="password" id="password" />
+							<button>OK</button>
+						</div>
+					</main>
+				</div>
+			</React.Fragment>
+		)
+	}
+}
 
-export default Login;
+
+export default WithLoggingHOC(Login)

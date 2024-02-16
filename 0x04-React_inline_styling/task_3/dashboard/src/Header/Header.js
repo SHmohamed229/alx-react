@@ -1,39 +1,32 @@
-import React from 'react';
-import logo from '../assets/holberton-logo.jpg';
-import { StyleSheet, css } from 'aphrodite';
+import React, { Component } from 'react'
+import { StyleSheet, css } from 'aphrodite'
+import logo from '../assets/logo.jpg'
 
-const styles = StyleSheet.create({
-	'App-header': {
-		fontSize: '1.4rem',
-		color: 'red',
+function Header() {
+	return (
+		<header className={css(headerStyles.root, headerStyles.appHeader)}>
+			<img src={logo} className={css(headerStyles.appLogo)} alt="logo" />
+			<h1>School dashboard</h1>
+		</header>
+	)
+}
+
+const primaryColor = '#E11D3F';
+
+const headerStyles = StyleSheet.create({
+	appHeader: {
 		display: 'flex',
+		flexDirection: 'row',
 		alignItems: 'center',
-		padding: '1.2em',
-		height: '100%',
-		marginBottom: '30px',
-		'@media (max-width: 375px)': {
-			marginTop: '30px',
-			width: 'content-fit',
-			fontSize: '0.9rem',
-			display: 'flex',
-			gap: '2px',
-			justifyContent: 'center',
-		},
+		color: `${primaryColor}`,
+		borderBottom: `1px solid ${primaryColor}`,
 	},
 
-	img: {
-		width: '100px',
-		height: '100px',
-	},
+	appLogo: {
+		height: '200px',
+		width: '200px'
+	}
 });
 
-const Header = () => {
-	return (
-		<div className={css(styles['App-header'])}>
-			<img src={logo} alt='Holberton' className={css(styles.img)} />
-			<h1>School dashboard</h1>
-		</div>
-	);
-};
 
-export default Header;
+export default Header
