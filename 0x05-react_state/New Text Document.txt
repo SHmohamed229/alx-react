@@ -1,0 +1,412 @@
+            *ngIf="entityCode !=='ALEX_PORTS_ENTITY'"
+            *ngIf="entityCode=='RED_SEA_PORTS_ENTITY'"
+            *ngIf="entityCode=='DAMIETTA_PORTS_ENTITY'||'ALEX_PORTS_ENTITY'"
+            *ngIf="entityCode !='DAMIETTA_PORTS_ENTITY'||'RED_SEA_PORTS_ENTITY'"
+
+
+	012113634055
+	01288954142
+
+
+
+
+
+
+
+
+
+
+import { Component, Input } from '@angular/core';
+import { DraftedDataMasterViewDto } from '../../models/drafted-data-master-view-dto.model';
+import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
+import { NavigationExtras, Router } from '@angular/router';
+import { DraftedDataMasterService } from '../../services/drafted-data-master.service';
+import { PagingRequest } from 'src/app/shared/models/paging-request.model';
+import { StatementTypeLkpEnum } from 'src/app/shared/enum/statement-type-lkp-enum';
+import { EntityTypeLkpEnum } from 'src/app/shared/enum/entity-type-lkp-enum';
+import { WorkflowService } from '../../services/workflow.service';
+import { UserWfDTO } from '../../models/user-wf-dto.model';
+import { MotTaskDTO } from '../../models/mot-task-dto.model';
+import { StatementTypeLkpDTO } from 'src/app/shared/models/statement-type-lkp-dto.model';
+import { TasksRequestFilterDto } from '../../models/tasks-request-filter-dto.model';
+
+@Component({
+  selector: 'app-data-drafted',
+  templateUrl: './data-drafted.component.html',
+  styleUrls: ['./data-drafted.component.css']
+})
+export class DataDraftedComponent {
+
+  draftedDataMasterViewDto: DraftedDataMasterViewDto = new DraftedDataMasterViewDto();
+  draftedDataMasterViewList: DraftedDataMasterViewDto[] = new Array();
+  statementTypeLkpDTO: StatementTypeLkpDTO = new StatementTypeLkpDTO();
+  searchResultCount: number = 0;
+  filterFlag: boolean = false;
+  statementTypeList: StatementTypeLkpDTO[] = new Array();
+  userWfDTO: UserWfDTO = new UserWfDTO();
+  motTaskDTODraftedList: MotTaskDTO[] = new Array();
+  motTaskDTONotDraftedList: MotTaskDTO[] = new Array();
+  tasksRequestFilterDto: TasksRequestFilterDto = new TasksRequestFilterDto();
+
+  @Input() visibleFlag: Boolean = true;
+  @Input() homeScreenFlag: Boolean = true;
+
+
+
+
+  constructor(private toastr: ToastrService,
+    private translateService: TranslateService,
+    private draftedDataMasterService: DraftedDataMasterService,
+    private workflowService: WorkflowService,
+    private router: Router) { }
+
+  ngOnInit(): void {
+    this.getAllStatementTypes();
+
+    if (this.homeScreenFlag) {
+      this.tasksRequestFilterDto.pageNumber = 0;
+      this.tasksRequestFilterDto.pageSize = 5;
+    } else if (!this.homeScreenFlag) {
+      this.tasksRequestFilterDto.pageNumber = 0;
+      this.tasksRequestFilterDto.pageSize = 10;
+    }
+
+    this.searchUserDraftedTasks();
+  }
+
+  getAllStatementTypes(): void {
+    this.draftedDataMasterService
+      .getAllStatementTypes()
+      .subscribe((response) => {
+        this.statementTypeList = response.data;
+      });
+  }
+
+  paginate(event: any) {
+    this.tasksRequestFilterDto.pageNumber = event.page;
+    console.log("event.page == " + event.page);
+    this.searchUserDraftedTasks();
+
+  }
+
+  searchUserDraftedTasks() {
+    this.tasksRequestFilterDto.statementId = this.statementTypeLkpDTO?.id;
+    this.workflowService.getUserDraftTasksPaging(this.tasksRequestFilterDto).subscribe(
+      response => {
+        this.motTaskDTODraftedList = response.data.result;
+        this.searchResultCount = response.data.numberOfElements;
+        console.log(response);
+      },
+      error => {
+        console.log("message = ", error.error.message);
+        this.toastr.error(this.translateService.instant(error.error.message));
+      }
+    );
+  }
+
+  clickSearchBtn(){
+    this.tasksRequestFilterDto.pageNumber = 0;
+    this.tasksRequestFilterDto.pageSize = 10;
+    this.searchUserDraftedTasks();
+  }
+
+  viewTransactionRouting(motTaskDTO: MotTaskDTO) {
+    const navigationExtras: NavigationExtras = {
+      queryParams: {
+        motTaskDTO: JSON.stringify(motTaskDTO),
+        mode: "Drafted",
+      }
+    };
+    if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.INCOME) {
+      if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.MARTIME_SAFETY_ENTITY) {
+        this.router.navigate(['/martime-safety-income'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RIVER_PORTS_ENTITY) {
+        this.router.navigate(['/river-income'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.TRANSPORTATION_ORGANIZATION_ENTITY) {
+        this.router.navigate(['/transportation-organization-income'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.LAND_AND_DRY_PORTS_ENTITY) {
+        this.router.navigate(['/land-port-income'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.METRO_ENTITY) {
+        this.router.navigate(['/metro-income'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RAILWAY_ENTITY) {
+        this.router.navigate(['/railway-income'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ALEX_PORTS_ENTITY ||
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY ||
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY) {
+        this.router.navigate(['/marine-addincome'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ROAD_BRIDGES_ENTITY) {
+        this.router.navigate(['/roads-bridges-income'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.NC_SLEEPING_CARS_SERVICES_ENTITY) {
+        this.router.navigate(['/national-company-income'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.LRT_ENTITY) {
+        this.router.navigate(['lrt-income'], navigationExtras);
+      }
+    } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.EXPENSE) {
+      if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.METRO_ENTITY) {
+        this.router.navigate(['/metro-expense'], navigationExtras);
+      }
+    }
+    else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.CURRENCY_EXCHANGE_RATE) {
+      if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.MARTIME_SAFETY_ENTITY) {
+        this.router.navigate(['/maritimeSafety/currencyExchangeRate'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RIVER_PORTS_ENTITY) {
+        this.router.navigate(['/river/currencyExchangeRate'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.TRANSPORTATION_ORGANIZATION_ENTITY) {
+        this.router.navigate(['/transportationOrganization/currencyExchangeRate'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.LAND_AND_DRY_PORTS_ENTITY) {
+        this.router.navigate(['/landPort/currencyExchangeRate'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.METRO_ENTITY) {
+        this.router.navigate(['/metro/currencyExchangeRate'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RAILWAY_ENTITY) {
+        this.router.navigate(['/railRoad/currencyExchangeRate'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ALEX_PORTS_ENTITY) {
+        this.router.navigate(['marine/currencyExchangeRate/', EntityTypeLkpEnum.ALEX_PORTS_ENTITY], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY) {
+        this.router.navigate(['marine/currencyExchangeRate/', EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY) {
+        this.router.navigate(['marine/currencyExchangeRate/', EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ROAD_BRIDGES_ENTITY) {
+        this.router.navigate(['roads/currencyExchangeRate'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.NC_SLEEPING_CARS_SERVICES_ENTITY) {
+        this.router.navigate(['national-company/currencyExchangeRate'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.LRT_ENTITY) {
+        this.router.navigate(['lrt/currencyExchangeRate'], navigationExtras);
+      }
+    }
+    else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.DATA_TRANSACTION) {
+
+       if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ROAD_BRIDGES_ENTITY) {
+        this.router.navigate(['/roads-bridges/roads'], navigationExtras);
+      }else if(motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.TRANSPORTATION_ORGANIZATION_ENTITY){
+        this.router.navigate(['/transportationOrganization/transactions'], navigationExtras);
+      }
+      else if(motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.LAND_AND_DRY_PORTS_ENTITY){
+        this.router.navigate(['/land-ports/transactions/', motTaskDTO.timeRateDTO.code], navigationExtras);
+      }
+      else if(motTaskDTO.entityTypeDTO.code  == EntityTypeLkpEnum.RAILWAY_ENTITY){
+        this.router.navigate(['railway/operating-transaction'], navigationExtras);
+      }
+
+
+
+    }
+    else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.DATA_TRANSACTION_TOTALS) {
+
+      if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ALEX_PORTS_ENTITY) {
+        this.router.navigate(['marine-port-total/transaction/', EntityTypeLkpEnum.ALEX_PORTS_ENTITY], navigationExtras);
+      }
+      else if (
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY) {
+        this.router.navigate(['marine-port-total/transaction/', EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY], navigationExtras);
+      }
+      else if (
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY) {
+        this.router.navigate(['marine-port-total/transaction/', EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY], navigationExtras);
+      }
+    }
+     else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.BUDGETS) {
+      if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RIVER_PORTS_ENTITY) {
+        this.router.navigate(['riverTransprt/budget'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ROAD_BRIDGES_ENTITY) {
+        this.router.navigate(['roads/budget'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.METRO_ENTITY) {
+        this.router.navigate(['metro/budget'], navigationExtras);
+      } else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.MARTIME_SAFETY_ENTITY) {
+        this.router.navigate(['maritime-safety/budget'], navigationExtras);
+      }else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.LAND_AND_DRY_PORTS_ENTITY) {
+        this.router.navigate(['land-port/budget'], navigationExtras);
+      }else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.TRANSPORTATION_ORGANIZATION_ENTITY) {
+        this.router.navigate(['transportation-organization/budget'], navigationExtras);
+      }else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ALEX_PORTS_ENTITY) {
+        this.router.navigate(['MarinePorts/budget/', EntityTypeLkpEnum.ALEX_PORTS_ENTITY], navigationExtras);
+      } else if (
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY) {
+        this.router.navigate(['MarinePorts/budget/', EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY], navigationExtras);
+      } else if (
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY) {
+        this.router.navigate(['MarinePorts/budget/', EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY], navigationExtras);
+      }
+
+    } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.INCIDENT_REPORT_FOR_TECHNICAL_CONTROL) {
+      if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.METRO_ENTITY) {
+        this.router.navigate(['metro/technical-control-report'], navigationExtras);
+      } else if(motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RAILWAY_ENTITY){
+        this.router.navigate(['railroad/technical-control-report'], navigationExtras);
+      }
+    }else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.STATEMENT_RISK_WRAP) {
+      if(motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RAILWAY_ENTITY){
+        this.router.navigate(['railroad/detailed-statement-risk-wrap'], navigationExtras);
+      }
+    } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.SHIPS) {
+      if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ALEX_PORTS_ENTITY) {
+        this.router.navigate(['marinePorts/ships/', EntityTypeLkpEnum.ALEX_PORTS_ENTITY], navigationExtras);
+      }
+      else if (
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY) {
+        this.router.navigate(['marinePorts/ships/', EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY], navigationExtras);
+      }
+      else if (
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY) {
+        this.router.navigate(['marinePorts/ships/', EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY], navigationExtras);
+      }
+    }
+    else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.TRANSACTION) {
+      if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.ALEX_PORTS_ENTITY) {
+        this.router.navigate(['marinePorts/transactions/', EntityTypeLkpEnum.ALEX_PORTS_ENTITY], navigationExtras);
+      }
+      else if (
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY) {
+        this.router.navigate(['marinePorts/transactions/', EntityTypeLkpEnum.DAMIETTA_PORTS_ENTITY], navigationExtras);
+      }
+      else if (
+        motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY) {
+        this.router.navigate(['marinePorts/transactions/', EntityTypeLkpEnum.RED_SEA_PORTS_ENTITY], navigationExtras);
+      }
+
+      else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.METRO_ENTITY){
+        if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.TRANSACTION) {
+          this.router.navigate(['/metro/transaction'], navigationExtras);
+        }
+      }
+      else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.LRT_ENTITY){
+          this.router.navigate(['/lrt-passengers/transactions'], navigationExtras);
+      }
+      else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.NC_SLEEPING_CARS_SERVICES_ENTITY){
+          this.router.navigate(['/national-company/transactions'], navigationExtras);
+      }
+
+      else   if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RIVER_PORTS_ENTITY) {
+        this.router.navigate(['/river-transport/transaction'], navigationExtras);
+      }
+    }
+
+
+    else if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.METRO_ENTITY) {
+      if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.OPERATING) {
+        this.router.navigate(['/metro/operating'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.DAMAGE) {
+        this.router.navigate(['/metro/damage'], navigationExtras);
+      }  else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.ENERGY) {
+        this.router.navigate(['/metro/energyTransaction'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.CUSTODY_OF_MOVING_UNITS) {
+        this.router.navigate(['/metro/custody-moving-units'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.EQUIPMENT) {
+        this.router.navigate(['/metro/equipment'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.PERFORMANCE_PRODUCTION_RATES) {
+        this.router.navigate(['/metro/performance-productivity-rates'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.OPERATIONAL_DATA) {
+        this.router.navigate(['/metro/operational-data'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.EXAMINATION) {
+        this.router.navigate(['/metro/examination'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.MAINTANANCE2_PROFRAM) {
+        this.router.navigate(['/metro/maintenance2-programs'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.TRAIN_REPORT_FAULT) {
+        this.router.navigate(['/metro/train-power-fault'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.MOBILE_UNIT_FAULT) {
+        this.router.navigate(['/metro/mobile-unit-fault'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.CONTROL_SIGNAL_FAULT) {
+        this.router.navigate(['/metro/control-signal-fault'], navigationExtras);
+      } else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.EVENTS_AFFECT_OPERATIONS) {
+        this.router.navigate(['/metro/events-affect-operations'], navigationExtras);
+      }else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.TRAIN_OPERATION_REGULARITY){
+        this.router.navigate(['/metro/trainsOperationRegularity'], navigationExtras);
+      }else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.MAINTANANCE){
+        this.router.navigate(['/metro/maintenance'], navigationExtras);
+      }
+    }else if(motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RAILWAY_ENTITY) {
+      console.log("RAILWAY_ENTITYRAILWAY_ENTITYRAILWAY_ENTITY");
+      console.log(motTaskDTO.statementTypeDTO.code);
+
+       if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.STRACTURE_STATE){
+        this.router.navigate(['/railway/StructureStates'], navigationExtras);
+      }
+      else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.CASES_WEATHER_CONDITIONS){
+        this.router.navigate(['/railway/casesWeatherConditions'], navigationExtras);
+      }else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.TRAIN_CARS){
+        this.router.navigate(['/railroad/train-cars'], navigationExtras);
+      }
+      else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.DELAYS_TOTAL){
+        this.router.navigate(['/railroad/delays-total'], navigationExtras);
+      }else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.ABOUT_TO_HAPPEN){
+        this.router.navigate(['/railroad/about-to-happen'], navigationExtras);
+      }
+      else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.INFRASTRUCTURE_FAILURES){
+        this.router.navigate(['/railway/infrastructureFailures'], navigationExtras);
+      }
+
+      else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.SIGNALS){
+        this.router.navigate(['/railway/signals'], navigationExtras);
+      }
+      else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.SLIPWAYS){
+        this.router.navigate(['/railway/slipways'], navigationExtras);
+      }
+      else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.EXAMINATION){
+        this.router.navigate(['/railway/examination'], navigationExtras);
+      }
+      else if(motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.MAINTANANCE){
+        this.router.navigate(['/railway/maintenance'], navigationExtras);
+      }
+      else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.LUBRICANTS_HAVE_OBSTACLES) {
+        this.router.navigate(['/railway/lubricants-obstacles'], navigationExtras);
+      }else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.SUPPLY_POSITIONS_CENTERS_TRACTORS) {
+       this.router.navigate(['/railway/supply-positions-centers-tractors'], navigationExtras);
+     }else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.CART_STOP) {
+       this.router.navigate(['/railway/cart-stop'], navigationExtras);
+     }else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.CASES_INTRUSIONS_PORTS_CROSSINGS) {
+       this.router.navigate(['/railway/cases-intrusions-ports-crossings'], navigationExtras);
+     }else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.TRIPS) {
+       this.router.navigate(['/railway/trips'], navigationExtras);
+     }
+     else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.OTHER_CASES) {
+      this.router.navigate(['/railway/other-cases'], navigationExtras);
+    }else if (motTaskDTO.statementTypeDTO.code == StatementTypeLkpEnum.MOBILE_UNIT_MALFUNCTIONS_PER_MILLION_TRAIN_KM) {
+      this.router.navigate(['/railway/mobile-unit-malfunctions-per-million-train-km'], navigationExtras);
+    }else   if(motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.CASES_CRANES_MALFUNCTION){
+      this.router.navigate(['railway/case-of-cranes-malfunction'], navigationExtras);
+    }else   if(motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.CUSTODY_OF_MOVING_UNITS){
+      this.router.navigate(['/railroad/custodyMobileUnits'], navigationExtras);
+    }else if(motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.MOBILE_UNIT_FAULT){
+      this.router.navigate(['/railway/mobile-unit-malfunctions'], navigationExtras);
+    }else   if(motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.TRAINS_CARS_TOTAL){
+      this.router.navigate(['/railroad/trainsCarsTotal'], navigationExtras);
+    }
+    else  if(motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.TRACTORS_TOTAL){
+      this.router.navigate(['/railroad/tractorsTotal'], navigationExtras);
+    }
+    else if(motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.EQUIPMENT){
+      this.router.navigate(['/railroad/equipment'], navigationExtras);
+    }
+    else if(motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.TRACTORS){
+      this.router.navigate(['/railway/tractors'], navigationExtras);
+    }
+    else if(motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.BEAMS){
+      this.router.navigate(['/railway/beams'], navigationExtras);
+    }
+    else if(motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.OPERATIONAL_DATA){
+      this.router.navigate(['/railway/operational'], navigationExtras);
+    }
+
+
+
+
+
+
+
+
+    }   else if (motTaskDTO.statementTypeDTO.code==StatementTypeLkpEnum.OPERATING){
+      if (motTaskDTO.entityTypeDTO.code == EntityTypeLkpEnum.RIVER_PORTS_ENTITY) {
+       this.router.navigate(['/river-transport/operating'], navigationExtras);
+     }
+    }
+
+
+  }
+
+}
+
+
+
+
+
+      this.railroadCustodyMobileUnitsDetailDto.serviceEntryDate = new Date(response.data.railroadCustodyMobileUnitsDetails[0].serviceEntryDate!);
